@@ -1,2 +1,4 @@
 data/datashare.csv
 venv/
+.gitignore
+**/__pycache__/
