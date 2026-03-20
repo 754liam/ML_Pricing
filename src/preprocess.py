@@ -27,6 +27,8 @@ class DataPipeline:
 
     def impute_missing(self):
         num_cols = self.df.select_dtypes(include='number').columns
+        self.indicator_matrix = self.df[num_cols].isna().astype(int)
+
         # for all numerical columnms, fill NA values with the median of that columns feature with respect to all other rows in the same year_month
         for col in num_cols:
             self.df[col] = self.df[col].fillna(
@@ -35,9 +37,17 @@ class DataPipeline:
         # imputation of numeric columns using median of the respective month/year
         # following the direction of original paper
         # no non-numeric columns upon further investigation
-        self.df.dropna(inplace=True)
-        self.df.reset_index(drop=True, inplace=True)
+        
+        # remaining non na columns (dropping the leftover NA)
+        mask = self.df[num_cols].notna().all(axis=1)
+
+        # drop
+        self.df = self.df.loc[mask].reset_index(drop=True)
+        self.indicator_matrix = self.indicator_matrix.loc[mask].reset_index(drop=True)
+
+        # ensure indicator matrix and cleaned data is same shape
         print(f"Cleaned Data: {self.df.shape[0]} rows and {self.df.shape[1]} columns")
+        print(f"Indicator Matrix Shape: {self.indicator_matrix.shape[0]} rows and {self.indicator_matrix.shape[1]} columns")
         return self
 
     def normalize(self):
