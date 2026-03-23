@@ -26,7 +26,8 @@ class DataPipeline:
         return self
 
     def impute_missing(self):
-        num_cols = self.df.select_dtypes(include='number').columns
+        exclude = ['ret', 'permno']
+        num_cols = [c for c in self.df.select_dtypes(include='number').columns if c not in exclude]
         self.indicator_matrix = self.df[num_cols].isna().astype(int)
 
         # for all numerical columnms, fill NA values with the median of that columns feature with respect to all other rows in the same year_month
