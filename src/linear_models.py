@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import ElasticNet
 from sklearn.decomposition import PCA
-from sklearn.linear_model import Ridge
 
 class OLS:
     def __init__(self):
@@ -15,7 +14,9 @@ class OLS:
         # amount of multiplications for each weight. The sum of all of these weights and values in the columns
         # is being best adjusted to equal the return. These weights are the closest possible fit - a minimization of the sum of
         # squared errors between X @ w and Y. This is OLS.
-        self.weights = np.linalg.inv(X.T @ X) @ X.T @ Y
+        # the actual math: self.weights = np.linalg.inv(X.T @ X) @ X.T @ Y
+        self.weights = np.linalg.lstsq(X, Y, rcond=None)[0]
+        # the stable version ^
 
     def predict(self, X):
         if self.weights is None:
@@ -47,6 +48,23 @@ class ElasticNetModel:
             raise ValueError("Model not fitted yet. Call fit(input: X, target: Y) first.")
         predictions = self.model.predict(X)
         return predictions
+    
+class PCAModel:
+    # basically OLS with component grouping
+    def __init__(self, n_components=10):
+        self.n_components = n_components
+        self.pca = None
+        self.weights = None
+
+    def fit(self, X, Y):
+        self.pca = PCA(n_components=self.n_components)
+        X_compressed = self.pca.fit_transform(X)
+        self.weights = np.linalg.lstsq(X_compressed, Y, rcond=None)[0]
+
+    def predict(self, X):
+        if self.weights is None:
+            raise ValueError("Model not fitted yet. Call fit(input: X, target: Y) first.")
+        return self.pca.transform(X) @ self.weights
     
 
     
